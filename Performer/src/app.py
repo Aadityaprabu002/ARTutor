@@ -40,21 +40,30 @@ class App:
                 # Recolor back to BGR
                 image.flags.writeable = True
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
+                nose_x = 0
+                nose_y = 0
                 try:
-                    landmarks = list(results.pose_landmarks.landmark)
+                    landmarks = results.pose_landmarks.landmark
                     keypoints = dict()
                     for pose_landmark in self.mp_pose.PoseLandmark:
                         extracted_pose_landmark = landmarks[pose_landmark.value]
-                        keypoints[pose_landmark.name] = {
+                        if pose_landmark.value in [23, 24]:
+                            keypoints[pose_landmark.value] = {
                                 'x': extracted_pose_landmark.x,
                                 'y': extracted_pose_landmark.y,
                                 'z': extracted_pose_landmark.z,
-                                'visibility': extracted_pose_landmark.visibility
-                        }
-
+                                # 'visibility': extracted_pose_landmark.visibility
+                            }
+                        else:
+                            keypoints[pose_landmark.value] = {
+                                'x': extracted_pose_landmark.x,
+                                'y': extracted_pose_landmark.y,
+                                # 'z': extracted_pose_landmark.z,
+                                # 'visibility': extracted_pose_landmark.visibility
+                            }
 
                     print(keypoints)
+
                     keypoints = json.dumps(keypoints)
                     self.server_socket.sendto(keypoints.encode(), (self.server_ip_address, self.server_port))
                 except:
