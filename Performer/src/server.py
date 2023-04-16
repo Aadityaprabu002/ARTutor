@@ -3,6 +3,7 @@ import json
 import time
 
 broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 broadcast_socket.settimeout(0.2)
