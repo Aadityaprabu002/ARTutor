@@ -2,7 +2,7 @@ import websockets
 import asyncio
 
 async def listen():
-    url = 'ws://3.110.225.126:8080'
+    url = 'ws://<yourip>:8080'
     async with websockets.connect(url) as ws:
         while True:
             landmarks = await ws.recv()
