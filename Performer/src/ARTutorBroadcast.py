@@ -1,4 +1,3 @@
-import websocket
 import websockets
 import asyncio
 
@@ -12,10 +11,10 @@ async def echo(ws_client, path):
     connected.add(ws_client)
     try:
         async for message in ws_client:
-            print('Received message from client:' + message)
-            for conn in connected:
-                if conn != ws_client:
-                    await conn.send(message)
+            print('A message received from client')
+            # for conn in connected:
+            #     if conn != ws_client:
+            #         await conn.send(message)
 
     except websockets.exceptions.ConnectionClosed as e:
         print('A Client just disconnected!')
