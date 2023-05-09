@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import mediapipe as mp
 import json
@@ -20,10 +22,13 @@ class App:
         print('Pose Estimator setup Finished')
 
     async def __capture_and_transmit_pose(self, client_websocket):
+        print('Capture Started')
+
         with self.mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
+            self.__is_capturing = True
+            i = 0
             while self.video_capture.isOpened():
                 ret, frame = self.video_capture.read()
-
                 # Recolor image to RGB
                 image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 image.flags.writeable = False
@@ -33,8 +38,7 @@ class App:
                 # Recolor back to BGR
                 image.flags.writeable = True
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-                nose_x = 0
-                nose_y = 0
+
                 try:
                     landmarks = results.pose_landmarks.landmark
                     keypoints = dict()
@@ -55,14 +59,23 @@ class App:
                                 # 'visibility': extracted_pose_landmark.visibility
                             }
 
-                    print(keypoints)
-
                     keypoints = json.dumps(keypoints)
+                    print(keypoints)
+                    chunk_index = 0
+                    chunk_size = len(keypoints) // 1
                     try:
-                        await client_websocket.send(keypoints.encode())
+                        while chunk_index < len(keypoints):
+                            await client_websocket.send(
+                                keypoints[
+                                chunk_index:(chunk_index + chunk_size + 1)
+                                ].encode()
+                            )
+                            chunk_index += chunk_size
+
                     except Exception as e:
-                        print('Failed to send data to server')
-                        print(f'Error: {e}')
+                        print('Failed to send key points to server')
+                        print(f'Error: {str(e)}')
+                        pass
 
                 except Exception as e:
                     print('Error with open cv')
@@ -73,11 +86,14 @@ class App:
                 self.mp_drawing.draw_landmarks(image, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS)
 
                 # Project image with pose landmark lines
-                cv2.imshow('Feed', image)
-                if cv2.waitKey(10) & 0xFF == ord('q'):
+                cv2.imshow('Camera Feed', image)
 
-                    self.stop()
+                if cv2.waitKey(10) & 0xFF == ord('q'):
+                    self.__is_capturing = False
+                    self.__is_running = False
                     break
+
+        print('Capture Ended')
 
     async def __connect_server(self):
         server_websocket_url = f'ws://{self.server_ip_address}:{self.server_port}'
@@ -85,13 +101,12 @@ class App:
         try:
             async with websockets.connect(server_websocket_url) as client_websocket:
                 print(f'Connected to WebSocket server at {server_websocket_url}')
-                print('Capture Started')
                 await self.__capture_and_transmit_pose(client_websocket)
-                print('Capture Ended')
+
+
         except Exception as e:
             print(f'Failed to connect to WebSocket server at {server_websocket_url}')
             print(f'Error: {e}')
-
 
     def setup(self):
         print('Setup Started')

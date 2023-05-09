@@ -4,7 +4,7 @@ import cv2
 import mediapipe as mp
 import socket
 import json
-import websockets
+
 
 class App:
     def __init__(self, port=8080, ip_address='<broadcast>'):
@@ -40,8 +40,7 @@ class App:
                 # Recolor back to BGR
                 image.flags.writeable = True
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-                nose_x = 0
-                nose_y = 0
+
                 try:
                     landmarks = results.pose_landmarks.landmark
                     keypoints = dict()
@@ -58,14 +57,21 @@ class App:
                             keypoints[pose_landmark.value] = {
                                 'x': extracted_pose_landmark.x,
                                 'y': extracted_pose_landmark.y,
-                                # 'z': extracted_pose_landmark.z,
+                                'z': extracted_pose_landmark.z,
                                 # 'visibility': extracted_pose_landmark.visibility
                             }
 
                     print(keypoints)
 
                     keypoints = json.dumps(keypoints)
-                    self.server_socket.sendto(keypoints.encode(), (self.server_ip_address, self.server_port))
+                    max_payload_size = len(keypoints) // 2
+                    self.server_socket.sendto("START".encode(), (self.server_ip_address, self.server_port))
+
+                    self.server_socket.sendto(keypoints[:max_payload_size].encode(), (self.server_ip_address, self.server_port))
+                    self.server_socket.sendto(keypoints[max_payload_size:].encode(),
+                                              (self.server_ip_address, self.server_port))
+                    self.server_socket.sendto("END".encode(), (self.server_ip_address, self.server_port))
+
                 except:
                     print('Error in decoding landmarks or broadcasting landmarks!')
                     pass
