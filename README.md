@@ -23,6 +23,6 @@ AR application development, this project presents a comprehensive solution that
 enables learners to visualize and mimic the performer's movements in a
 dynamic and interactive manner.
 <br>
-[Click For full Documentation](https://github.com/Aadityaprabu002/ARTutor/blob/main/Documentation/ARTUTOR%20Report.pdf)
+[Click For full Documentation](https://github.com/Aadityaprabu002/ARTutor/blob/main/Documentation/ARTUTOR.pdf)
 <br>
 [Click here for demo](https://youtube.com/playlist?list=PLCk1Y31wvMhXjcgWnek1wSJLmZKr1x8f1)
